@@ -55,6 +55,13 @@ As alterações à base de dados usam Flyway (`backend/src/main/resources/db/mig
 
 `compose.yaml`, os Dockerfiles e a pipeline GitHub Actions permitem construir os serviços e validar cada alteração. Para publicar na internet, configurar um domínio com HTTPS, alterar `DATABASE_PASSWORD`, restringir a exposição da base de dados e adicionar autenticação/isolamento por utilizador. Esta primeira versão é de **utilizador único**: não deve ser publicada como serviço aberto antes dessa etapa. Guardar uma cópia de segurança regular do volume PostgreSQL.
 
+Para criar o repositório privado no GitHub a partir desta pasta, depois de autenticar a GitHub CLI:
+
+```bash
+gh auth login -h github.com
+gh repo create myGym --private --source=. --remote=origin --push
+```
+
 ## Estrutura
 
 ```text
