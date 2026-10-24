@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/mygym}
+    username: ${DATABASE_USER:mygym}
+    password: ${DATABASE_PASSWORD:mygym}
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}
+app:
+  cors-origin: ${CORS_ORIGIN:http://localhost:5173}

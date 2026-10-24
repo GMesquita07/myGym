@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mygym
+      POSTGRES_USER: mygym
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-mygym}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mygym -d mygym"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/mygym
+      DATABASE_USER: mygym
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-mygym}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:8088}
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build: ./frontend
+    ports:
+      - "${WEB_PORT:-8088}:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
