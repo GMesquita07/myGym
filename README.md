@@ -1,6 +1,6 @@
 # myGym
 
-Aplicação para planear treinos, registar pesos e repetições durante a sessão e acompanhar a evolução ao longo do tempo. Interface em português de Portugal, feita com React, Vite e Bootstrap; API REST em Java/Spring Boot; dados em PostgreSQL.
+Aplicação mobile para iPhone que permite planear treinos, registar pesos e repetições durante a sessão e acompanhar a evolução ao longo do tempo. Interface em português de Portugal, feita com React, Vite e Bootstrap; API REST em Java/Spring Boot; dados em PostgreSQL.
 
 ## O que já funciona
 
@@ -19,6 +19,12 @@ docker compose up --build
 
 Abrir `http://localhost:8088`. O volume `postgres_data` mantém os dados entre arranques. Para parar: `docker compose down`.
 No arranque completo, a base de dados só é acessível aos serviços Docker; não ocupa a porta 5432 do computador.
+
+## Utilizar no iPhone
+
+O primeiro ecrã pergunta se queres entrar no **Modo Treino** ou no **Modo Histórico**. A interface foi desenhada para o ecrã do iPhone, com botões maiores, navegação simples e suporte às áreas seguras do dispositivo.
+
+Esta versão é uma web app preparada para o ecrã inicial do iPhone. Para a testar, coloca o iPhone e o computador na mesma rede Wi-Fi e abre no Safari `http://<IP_DO_COMPUTADOR>:8088`. Para a instalar e usar fora da rede local, disponibiliza a app num domínio HTTPS protegido e usa **Partilhar → Adicionar ao ecrã principal**. O servidor e a base de dados têm de estar ligados; o registo de treinos ainda não funciona offline.
 
 ## Desenvolvimento local
 
