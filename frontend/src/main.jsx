@@ -83,53 +83,58 @@ function App() {
     await run(async () => { setSession(await api.complete(session.id, notes)); await refresh() }, () => navigate('session'))
   }
 
-  const completed = sessions.filter((item) => item.completedAt)
   const active = session && !session.completedAt ? session : null
-  const totalVolume = completed.reduce((sum, item) => sum + Number(item.volumeKg), 0)
 
+  const screenName = { train: 'Modo Treino', history: 'Modo Histórico', plans: 'Os meus treinos', editor: editing ? 'Editar treino' : 'Novo treino', session: 'Detalhes do treino' }
   return <div className="app-shell">
-    <aside className="sidebar d-none d-lg-flex">
-      <button className="brand" onClick={() => navigate('home')}><span className="brand-mark"><Icon name="dumbbell" size={23}/></span><span>my<span>Gym</span></span></button>
-      <div className="nav-caption">MENU PRINCIPAL</div>
-      <nav className="side-nav">
-        <NavButton icon="grid" label="Visão geral" active={view === 'home'} onClick={() => navigate('home')}/>
-        <NavButton icon="bolt" label="Modo Treino" active={view === 'train'} onClick={() => navigate('train')}/>
-        <NavButton icon="history" label="Modo Histórico" active={view === 'history' || view === 'session'} onClick={() => navigate('history')}/>
-        <NavButton icon="dumbbell" label="Os meus treinos" active={view === 'plans' || view === 'editor'} onClick={() => navigate('plans')}/>
-      </nav>
-      <div className="sidebar-bottom"><div className="sidebar-quote">“O progresso constrói-se<br/>uma série de cada vez.”</div><div className="sidebar-footer">myGym · versão inicial</div></div>
-    </aside>
     <div className="main-column">
-      <header className="topbar"><button className="brand d-lg-none" onClick={() => navigate('home')}><span className="brand-mark"><Icon name="dumbbell" size={20}/></span><span>my<span>Gym</span></span></button><div className="topbar-right"><span className="topbar-date"><Icon name="calendar" size={16}/> {fmtDate(new Date())}</span><span className="avatar">MG</span></div></header>
-      <main className="content container-fluid">
+      <header className="app-header">
+        {view === 'home'
+          ? <span className="app-header-logo"><span className="brand-mark"><Icon name="dumbbell" size={20}/></span><span>my<span>Gym</span></span></span>
+          : <button className="header-back" onClick={() => navigate(view === 'editor' ? 'plans' : view === 'session' ? 'history' : 'home')} aria-label="Voltar"><Icon name="back" size={21}/></button>}
+        {view !== 'home' && <span className="app-header-title">{screenName[view]}</span>}
+        <span className="header-end" aria-hidden="true" />
+      </header>
+      <main className={`content ${view === 'home' ? 'home-content' : ''}`}>
         {error && <div className="alert app-alert d-flex justify-content-between align-items-start" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError('')} aria-label="Fechar">×</button></div>}
-        {loading ? <div className="loading">A preparar o teu espaço de treino…</div> : <>
-          {view === 'home' && <Home plans={plans} completed={completed} totalVolume={totalVolume} active={active} onNavigate={navigate}/>}
+        {view === 'home' && <Home active={active} onNavigate={navigate}/>}
+        {view !== 'home' && (loading ? <div className="loading">A preparar o teu espaço de treino…</div> : <>
           {view === 'plans' && <Plans plans={plans} busy={busy} onCreate={() => { setEditing(null); navigate('editor') }} onEdit={(plan) => { setEditing(plan); navigate('editor') }} onDelete={deletePlan} onStart={startPlan}/>}
           {view === 'editor' && <PlanEditor plan={editing} busy={busy} onSave={savePlan} onCancel={() => navigate('plans')}/>}
-          {view === 'train' && (active ? <Training session={active} busy={busy} onAdd={addSet} onRemove={removeSet} onComplete={complete}/> : <StartTraining plans={plans} onStart={startPlan} onCreate={() => { setEditing(null); navigate('editor') }} busy={busy}/>)}
+          {view === 'train' && (active ? <Training session={active} busy={busy} onAdd={addSet} onRemove={removeSet} onComplete={complete}/> : <StartTraining plans={plans} onStart={startPlan} onCreate={() => { setEditing(null); navigate('editor') }} onManage={() => navigate('plans')} busy={busy}/>)}
           {view === 'history' && <History sessions={sessions} onOpen={openSession} onTrain={() => navigate('train')}/>}
           {view === 'session' && session && <SessionDetail session={session} onBack={() => navigate('history')} onTrain={() => navigate('train')}/>}
-        </>}
+        </>)}
       </main>
     </div>
-    <nav className="mobile-nav d-lg-none" aria-label="Navegação principal"><NavButton icon="grid" label="Início" active={view === 'home'} onClick={() => navigate('home')}/><NavButton icon="bolt" label="Treino" active={view === 'train'} onClick={() => navigate('train')}/><NavButton icon="history" label="Histórico" active={view === 'history' || view === 'session'} onClick={() => navigate('history')}/><NavButton icon="dumbbell" label="Planos" active={view === 'plans' || view === 'editor'} onClick={() => navigate('plans')}/></nav>
   </div>
 }
 
-function NavButton({ icon, label, active, onClick }) { return <button className={`nav-button ${active ? 'active' : ''}`} onClick={onClick}><Icon name={icon} size={19}/><span>{label}</span></button> }
 function Eyebrow({ children }) { return <div className="eyebrow">{children}</div> }
 function PageHeading({ eyebrow, title, subtitle, action }) { return <div className="page-heading"><div><Eyebrow>{eyebrow}</Eyebrow><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>{action}</div> }
 function Empty({ icon, title, text, action }) { return <div className="empty-state"><div className="empty-icon"><Icon name={icon} size={28}/></div><h3>{title}</h3><p>{text}</p>{action}</div> }
 
-function Home({ plans, completed, totalVolume, active, onNavigate }) {
-  const latest = completed[0]
-  return <>
-    <div className="welcome"><Eyebrow>O TEU ESPAÇO DE EVOLUÇÃO</Eyebrow><h1>Faz de hoje um<br/><em>dia mais forte.</em></h1><p>Planeia, regista e acompanha cada passo. O teu próximo treino começa aqui.</p><div className="welcome-actions"><button className="btn btn-accent" onClick={() => onNavigate('train')}><Icon name="bolt" size={18}/>{active ? 'Continuar treino' : 'Começar treino'}<Icon name="arrow" size={18}/></button><button className="btn btn-ghost" onClick={() => onNavigate('history')}>Ver histórico <Icon name="arrow" size={18}/></button></div><div className="welcome-art"><div className="art-ring ring-1"/><div className="art-ring ring-2"/><Icon name="dumbbell" size={92}/></div></div>
-    <div className="section-label">O TEU PERCURSO <span>ATÉ AGORA</span></div>
-    <div className="row g-3 stat-grid"><div className="col-6 col-xl-4"><Stat icon="check" number={completed.length} label="Treinos concluídos" color="lime"/></div><div className="col-6 col-xl-4"><Stat icon="dumbbell" number={plans.length} label="Planos criados" color="purple"/></div><div className="col-12 col-xl-4"><Stat icon="chart" number={`${fmtNumber(totalVolume)} kg`} label="Volume acumulado" color="orange"/></div></div>
-    <div className="row g-4 home-lower"><div className="col-lg-7"><div className="panel h-100"><div className="panel-heading"><div><Eyebrow>ESCOLHE O TEU CAMINHO</Eyebrow><h2>Como queres continuar?</h2></div></div><button className="mode-card" onClick={() => onNavigate('train')}><span className="mode-icon lime"><Icon name="bolt" size={23}/></span><span><strong>Modo Treino</strong><small>Segue o plano, regista séries e supera o último treino.</small></span><Icon name="arrow" size={20}/></button><button className="mode-card" onClick={() => onNavigate('history')}><span className="mode-icon purple"><Icon name="history" size={23}/></span><span><strong>Modo Histórico</strong><small>Revê pesos, repetições e o teu progresso.</small></span><Icon name="arrow" size={20}/></button></div></div><div className="col-lg-5"><div className="panel h-100 last-panel"><Eyebrow>ÚLTIMA SESSÃO</Eyebrow>{latest ? <><h2>{latest.planName}</h2><p className="muted">{fmtDate(latest.completedAt)} · {fmtTime(latest.completedAt)}</p><div className="last-metrics"><span><strong>{latest.setCount}</strong> séries de trabalho</span><span><strong>{fmtNumber(latest.volumeKg)} kg</strong> de volume</span></div><button className="text-link" onClick={() => onNavigate('history')}>Explorar histórico <Icon name="arrow" size={17}/></button></> : <><h2>O primeiro registo espera por ti.</h2><p className="muted">Cria um plano e começa a construir o teu histórico.</p><button className="text-link" onClick={() => onNavigate('plans')}>Criar plano <Icon name="arrow" size={17}/></button></>}</div></div></div>
-  </>
+function Home({ active, onNavigate }) {
+  return <div className="entry-screen">
+    <div className="entry-intro">
+      <span className="entry-kicker"><span className="entry-kicker-dot"/> O TEU ESPAÇO DE TREINO</span>
+      <h1>Que tipo de<br/><em>sessão</em> queres<br/>iniciar?</h1>
+      <p>Escolhe como queres continuar hoje.</p>
+    </div>
+    <div className="entry-options">
+      <button className="entry-option entry-training" onClick={() => onNavigate('train')}>
+        <span className="entry-option-top"><span className="entry-option-icon"><Icon name="bolt" size={28}/></span><span className="entry-option-number">01 / 02</span></span>
+        <span className="entry-option-copy"><strong>Modo Treino</strong><small>{active ? `Continua ${active.planName} e regista as tuas séries.` : 'Segue o teu plano e regista cada série.'}</small></span>
+        <span className="entry-option-action">{active ? 'CONTINUAR TREINO' : 'COMEÇAR TREINO'} <Icon name="arrow" size={20}/></span>
+      </button>
+      <button className="entry-option entry-history" onClick={() => onNavigate('history')}>
+        <span className="entry-option-top"><span className="entry-option-icon"><Icon name="history" size={27}/></span><span className="entry-option-number">02 / 02</span></span>
+        <span className="entry-option-copy"><strong>Modo Histórico</strong><small>Revê os treinos passados e acompanha a evolução.</small></span>
+        <span className="entry-option-action">VER HISTÓRICO <Icon name="arrow" size={20}/></span>
+      </button>
+    </div>
+    <div className="entry-footer"><span/><p>UM TREINO DE CADA VEZ. SEMPRE EM FRENTE.</p><span/></div>
+  </div>
 }
 function Stat({ icon, number, label, color }) { return <div className="stat-card"><div className={`stat-icon ${color}`}><Icon name={icon} size={21}/></div><strong>{number}</strong><span>{label}</span></div> }
 
@@ -150,7 +155,7 @@ function PlanEditor({ plan, busy, onSave, onCancel }) {
   return <><PageHeading eyebrow="CONSTRÓI A TUA ROTINA" title={plan ? 'Editar treino' : 'Novo treino'} subtitle="Define a ordem, o objetivo de séries e o descanso de cada exercício."/><form onSubmit={submit} className="editor-layout"><div className="panel form-panel"><div className="form-section-title"><span className="number-badge">01</span><div><h2>Dados do treino</h2><p>Começa com um nome que reconheças facilmente.</p></div></div><div className="row g-3"><div className="col-md-7"><label className="form-label">Nome do treino</label><input className="form-control" value={name} maxLength="100" onChange={(e) => setName(e.target.value)} placeholder="Ex.: Treino Peito" required/></div><div className="col-12"><label className="form-label">Descrição <span className="optional">opcional</span></label><textarea className="form-control" rows="2" maxLength="500" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ex.: Peito e tríceps · foco em força"/></div></div></div><div className="panel form-panel"><div className="form-section-title"><span className="number-badge">02</span><div><h2>Exercícios</h2><p>Arrasta mentalmente a sequência: o primeiro aparece primeiro no treino.</p></div></div><div className="exercise-form-list">{exercises.map((exercise, index) => <div className="exercise-form" key={index}><div className="exercise-form-header"><span>EXERCÍCIO {String(index + 1).padStart(2, '0')}</span><button type="button" className="icon-button" disabled={exercises.length === 1} onClick={() => setExercises(exercises.filter((_, i) => i !== index))} aria-label={`Remover exercício ${index + 1}`}><Icon name="trash" size={17}/></button></div><div className="row g-3"><div className="col-12"><label className="form-label">Nome do exercício</label><input className="form-control" value={exercise.name} maxLength="120" onChange={(e) => update(index, 'name', e.target.value)} placeholder="Ex.: Supino com barra" required/></div><div className="col-4"><label className="form-label">Séries</label><input className="form-control" type="number" min="1" max="20" value={exercise.targetSets} onChange={(e) => update(index, 'targetSets', e.target.value)} required/></div><div className="col-4"><label className="form-label">Reps</label><input className="form-control" type="number" min="1" max="100" value={exercise.targetReps} onChange={(e) => update(index, 'targetReps', e.target.value)} required/></div><div className="col-4"><label className="form-label">Descanso (s)</label><input className="form-control" type="number" min="0" max="600" value={exercise.restSeconds} onChange={(e) => update(index, 'restSeconds', e.target.value)} required/></div></div></div>)}</div><button type="button" className="add-exercise" onClick={() => setExercises([...exercises, createExercise()])}><Icon name="plus" size={18}/> Adicionar exercício</button></div>{localError && <div className="alert app-alert">{localError}</div>}<div className="editor-actions"><button className="btn btn-ghost" type="button" onClick={onCancel}>Cancelar</button><button className="btn btn-accent" disabled={busy} type="submit">{busy ? 'A guardar…' : 'Guardar treino'} <Icon name="check" size={18}/></button></div></form></>
 }
 
-function StartTraining({ plans, onStart, onCreate, busy }) { return <><PageHeading eyebrow="MODO TREINO" title="Vamos treinar." subtitle="Escolhe o plano que vais seguir hoje. Cada série fica guardada no teu histórico."/>{plans.length ? <div className="row g-3">{plans.map((plan) => <div className="col-md-6 col-xl-4" key={plan.id}><button className="start-card" disabled={busy} onClick={() => onStart(plan)}><span className="start-icon"><Icon name="dumbbell" size={29}/></span><span className="start-title">{plan.name}</span><span className="muted">{plan.exercises.length} exercícios · {plan.exercises.reduce((n, e) => n + e.targetSets, 0)} séries planeadas</span><span className="start-bottom">Começar agora <Icon name="arrow" size={18}/></span></button></div>)}</div> : <Empty icon="bolt" title="Começa com um plano" text="Cria um treino para receberes a sequência de exercícios e registares o progresso." action={<button className="btn btn-accent" onClick={onCreate}>Criar treino <Icon name="arrow" size={18}/></button>}/>}</> }
+function StartTraining({ plans, onStart, onCreate, onManage, busy }) { return <><PageHeading eyebrow="MODO TREINO" title="Vamos treinar." subtitle="Escolhe o plano que vais seguir hoje. Cada série fica guardada no teu histórico." action={<button className="btn btn-ghost" onClick={onManage}>Gerir planos <Icon name="arrow" size={17}/></button>}/>{plans.length ? <div className="row g-3">{plans.map((plan) => <div className="col-md-6 col-xl-4" key={plan.id}><button className="start-card" disabled={busy} onClick={() => onStart(plan)}><span className="start-icon"><Icon name="dumbbell" size={29}/></span><span className="start-title">{plan.name}</span><span className="muted">{plan.exercises.length} exercícios · {plan.exercises.reduce((n, e) => n + e.targetSets, 0)} séries planeadas</span><span className="start-bottom">Começar agora <Icon name="arrow" size={18}/></span></button></div>)}</div> : <Empty icon="bolt" title="Começa com um plano" text="Cria um treino para receberes a sequência de exercícios e registares o progresso." action={<button className="btn btn-accent" onClick={onCreate}>Criar treino <Icon name="arrow" size={18}/></button>}/>}</> }
 
 function Training({ session, busy, onAdd, onRemove, onComplete }) {
   const [selected, setSelected] = useState(0)
