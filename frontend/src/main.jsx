@@ -16,6 +16,8 @@ function Icon({ name, size = 20 }) {
     dumbbell: <><path d="m6.5 6.5 11 11M4 9l5-5M15 20l5-5M2.5 11.5l9-9M12.5 21.5l9-9"/></>,
     history: <><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></>,
     chart: <><path d="M3 19h18M5 16l5-5 4 3 5-8"/><path d="M16 6h3v3"/></>,
+    bars: <><rect x="4" y="12" width="3.5" height="8" rx="1" fill="currentColor" stroke="none"/><rect x="10.25" y="7" width="3.5" height="13" rx="1" fill="currentColor" stroke="none"/><rect x="16.5" y="3" width="3.5" height="17" rx="1" fill="currentColor" stroke="none"/></>,
+    profile: <><circle cx="12" cy="8" r="3"/><path d="M5.5 19c.4-3.1 2.9-5 6.5-5s6.1 1.9 6.5 5H5.5Z"/></>,
     plus: <path d="M12 5v14M5 12h14"/>,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6"/>,
     back: <path d="M19 12H5m6 6-6-6 6-6"/>,
@@ -90,14 +92,14 @@ function App() {
     <div className="main-column">
       <header className="app-header">
         {view === 'home'
-          ? <span className="app-header-logo"><span className="brand-mark"><Icon name="dumbbell" size={20}/></span><span>my<span>Gym</span></span></span>
+          ? <span className="app-header-logo"><span className="brand-mark"><Icon name="dumbbell" size={24}/></span><span>my<span>Gym</span></span></span>
           : <button className="header-back" onClick={() => navigate(view === 'editor' ? 'plans' : view === 'session' ? 'history' : 'home')} aria-label="Voltar"><Icon name="back" size={21}/></button>}
         {view !== 'home' && <span className="app-header-title">{screenName[view]}</span>}
-        <span className="header-end" aria-hidden="true" />
+        {view === 'home' ? <span className="profile-mark" aria-hidden="true"><Icon name="profile" size={22}/></span> : <span className="header-end" aria-hidden="true" />}
       </header>
-      <main className={`content ${view === 'home' ? 'home-content' : ''}`}>
+      <main className={`content view-${view} ${view === 'home' ? 'home-content' : ''}`}>
         {error && <div className="alert app-alert d-flex justify-content-between align-items-start" role="alert"><span>{error}</span><button className="icon-button" onClick={() => setError('')} aria-label="Fechar">×</button></div>}
-        {view === 'home' && <Home active={active} onNavigate={navigate}/>}
+        {view === 'home' && <Home onNavigate={navigate}/>}
         {view !== 'home' && (loading ? <div className="loading">A preparar o teu espaço de treino…</div> : <>
           {view === 'plans' && <Plans plans={plans} busy={busy} onCreate={() => { setEditing(null); navigate('editor') }} onEdit={(plan) => { setEditing(plan); navigate('editor') }} onDelete={deletePlan} onStart={startPlan}/>}
           {view === 'editor' && <PlanEditor plan={editing} busy={busy} onSave={savePlan} onCancel={() => navigate('plans')}/>}
@@ -114,26 +116,23 @@ function Eyebrow({ children }) { return <div className="eyebrow">{children}</div
 function PageHeading({ eyebrow, title, subtitle, action }) { return <div className="page-heading"><div><Eyebrow>{eyebrow}</Eyebrow><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>{action}</div> }
 function Empty({ icon, title, text, action }) { return <div className="empty-state"><div className="empty-icon"><Icon name={icon} size={28}/></div><h3>{title}</h3><p>{text}</p>{action}</div> }
 
-function Home({ active, onNavigate }) {
+function Home({ onNavigate }) {
   return <div className="entry-screen">
     <div className="entry-intro">
-      <span className="entry-kicker"><span className="entry-kicker-dot"/> O TEU ESPAÇO DE TREINO</span>
-      <h1>Que tipo de<br/><em>sessão</em> queres<br/>iniciar?</h1>
-      <p>Escolhe como queres continuar hoje.</p>
+      <span className="entry-kicker">BEM-VINDO(A) À TUA APP</span>
+      <h1>my<span>Gym</span></h1>
+      <p>Treina hoje. Constrói o teu amanhã.</p>
     </div>
-    <div className="entry-options">
+    <div className="entry-options" aria-label="Escolhe o tipo de sessão">
       <button className="entry-option entry-training" onClick={() => onNavigate('train')}>
-        <span className="entry-option-top"><span className="entry-option-icon"><Icon name="bolt" size={28}/></span><span className="entry-option-number">01 / 02</span></span>
-        <span className="entry-option-copy"><strong>Modo Treino</strong><small>{active ? `Continua ${active.planName} e regista as tuas séries.` : 'Segue o teu plano e regista cada série.'}</small></span>
-        <span className="entry-option-action">{active ? 'CONTINUAR TREINO' : 'COMEÇAR TREINO'} <Icon name="arrow" size={20}/></span>
+        <span className="entry-option-icon"><Icon name="dumbbell" size={28}/></span>
+        <span className="entry-option-bottom"><span className="entry-option-copy"><strong>Modo <em>Treino</em></strong><small>Segue o teu plano, regista os teus treinos e alcança os teus objetivos.</small></span><span className="entry-option-arrow"><Icon name="arrow" size={22}/></span></span>
       </button>
       <button className="entry-option entry-history" onClick={() => onNavigate('history')}>
-        <span className="entry-option-top"><span className="entry-option-icon"><Icon name="history" size={27}/></span><span className="entry-option-number">02 / 02</span></span>
-        <span className="entry-option-copy"><strong>Modo Histórico</strong><small>Revê os treinos passados e acompanha a evolução.</small></span>
-        <span className="entry-option-action">VER HISTÓRICO <Icon name="arrow" size={20}/></span>
+        <span className="entry-option-icon"><Icon name="bars" size={28}/></span>
+        <span className="entry-option-bottom"><span className="entry-option-copy"><strong>Modo <em>Histórico</em></strong><small>Revê os teus treinos passados, acompanha a evolução e analisa os resultados.</small></span><span className="entry-option-arrow"><Icon name="arrow" size={22}/></span></span>
       </button>
     </div>
-    <div className="entry-footer"><span/><p>UM TREINO DE CADA VEZ. SEMPRE EM FRENTE.</p><span/></div>
   </div>
 }
 function Stat({ icon, number, label, color }) { return <div className="stat-card"><div className={`stat-icon ${color}`}><Icon name={icon} size={21}/></div><strong>{number}</strong><span>{label}</span></div> }
