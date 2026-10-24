@@ -18,14 +18,17 @@ docker compose up --build
 ```
 
 Abrir `http://localhost:8088`. O volume `postgres_data` mantém os dados entre arranques. Para parar: `docker compose down`.
+No arranque completo, a base de dados só é acessível aos serviços Docker; não ocupa a porta 5432 do computador.
 
 ## Desenvolvimento local
 
 Requisitos: Java 21, Maven, Node 22, npm e PostgreSQL 16 (ou Docker para a base de dados).
 
 ```bash
-docker compose up -d db
-cd backend && mvn spring-boot:run
+docker compose -f compose.yaml -f compose.dev.yaml up -d db
+cd backend
+set -a; . ../.env; set +a
+DATABASE_URL="jdbc:postgresql://localhost:${DB_PORT:-5433}/mygym" mvn spring-boot:run
 ```
 
 Noutro terminal:
@@ -34,7 +37,7 @@ Noutro terminal:
 cd frontend && npm ci && npm run dev
 ```
 
-Abrir `http://localhost:5173`. O Vite encaminha `/api` para `localhost:8080`. A API usa `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`, `PORT` e `CORS_ORIGIN`; os valores por defeito servem para o ambiente local. O frontend pode usar `VITE_API_URL` caso a API esteja noutro domínio.
+Abrir `http://localhost:5173`. O Vite encaminha `/api` para `localhost:8080`. O ficheiro `compose.dev.yaml` publica apenas a base de dados na porta definida por `DB_PORT` (5433 por defeito). A API usa `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`, `PORT` e `CORS_ORIGIN`; o frontend pode usar `VITE_API_URL` caso a API esteja noutro domínio.
 
 ## API REST
 
